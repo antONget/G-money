@@ -127,8 +127,9 @@ async def process_continue(callback: CallbackQuery, state: FSMContext):
     :return:
     """
     logging.info(f'process_continue {callback.message.chat.id}')
-    await callback.message.edit_text(text="Оставьте свой номер телефона и удобное время для связи!",
+    await callback.message.edit_text(text="Отлично 🎉, записал!",
                                      reply_markup=None)
+
     await callback.message.answer(text="Оставьте свой номер телефона!",
                                   reply_markup=kb.keyboards_get_contact())
     data = await state.get_data()
@@ -197,14 +198,14 @@ async def get_time(message: Message, state: FSMContext, bot: Bot) -> None:
     for p in position:
         if p:
             i += 1
-            text += f"{i+1}. {kb.list_help[i]}\n"
+            text += f"{i}. {kb.list_help[i]}\n"
     for admin in config.tg_bot.admin_ids.split(','):
         try:
             await bot.send_message(chat_id=admin,
                                    text=f"<b>Пользователь @{user_info.username} заполнил анкету:\n\n</b>"
                                         f"<b>Имя:</b> {user_info.fullname}\n"
                                         f"<b>Телефон:</b> {user_info.phone}\n"
-                                        f"<b>Телефон:</b> {message.text}\n"
+                                        f"<b>Время звонка:</b> {message.text}\n"
                                         f"<b>Ниша бизнеса:</b> {user_info.business}\n"
                                         f"<b>Чем мы можем быть полезны:</b>\n{text}")
         except:
