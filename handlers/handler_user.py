@@ -1,3 +1,5 @@
+import asyncio
+
 from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, ReplyKeyboardRemove
 from aiogram.filters import CommandStart, StateFilter
@@ -45,9 +47,11 @@ async def process_start_command(message: Message, state: FSMContext) -> None:
         await rq.add_user(tg_id=message.chat.id,
                           data={"tg_id": message.chat.id, "username": username})
     await message.answer_photo(photo=file_id,
-                               caption=f'Приветствую Вас! Меня зовут робот Илон, '
-                                       f'я вместе с командой G-money поможем Вам привлечь новых клиентов в Ваш бизнес.')
-    await message.answer(text="Как Вас зовут?")
+                               caption=f'Приветствую, я - робот Илон! 👋\n'
+                                       f'Мы вместе с командой G-money поможем привлечь новых клиентов в ваш'
+                                       f' бизнес 💰💰💰.')
+    await asyncio.sleep(1)
+    await message.answer(text="Как вас зовут?")
     await state.set_state(User.name)
 
 
@@ -60,15 +64,19 @@ async def get_fullname(message: Message, state: FSMContext, bot: Bot) -> None:
     :return:
     """
     logging.info(f'get_fullname {message.chat.id}')
-    await bot.delete_message(chat_id=message.chat.id,
-                             message_id=message.message_id-1)
-    await bot.delete_message(chat_id=message.chat.id,
-                             message_id=message.message_id)
+    # await bot.delete_message(chat_id=message.chat.id,
+    #                          message_id=message.message_id-1)
+    # await bot.delete_message(chat_id=message.chat.id,
+    #                          message_id=message.message_id)
+    await bot.set_message_reaction(chat_id=message.chat.id,
+                                   message_id=message.message_id,
+                                   reaction=[{"type": "emoji", "emoji": "🤝"}])
     await rq.set_fullname(fullname=message.text, tg_id=message.chat.id)
     await state.update_data(name=message.text)
     await state.set_state(state=None)
-    await message.answer(text=f"Очень приятно, {message.text}!\n\n"
-                              f"Какой у Вас бизнес?")
+    await message.answer(text=f"Очень приятно, {message.text} 👋.\n"
+                              f"Какой у вас бизнес?")
+
     await state.set_state(User.business)
 
 
@@ -81,16 +89,20 @@ async def get_business(message: Message, state: FSMContext, bot: Bot) -> None:
     :return:
     """
     logging.info(f'get_business {message.chat.id}')
-    await bot.delete_message(chat_id=message.chat.id,
-                             message_id=message.message_id-1)
-    await bot.delete_message(chat_id=message.chat.id,
-                             message_id=message.message_id)
+    # await bot.delete_message(chat_id=message.chat.id,
+    #                          message_id=message.message_id-1)
+    # await bot.delete_message(chat_id=message.chat.id,
+    #                          message_id=message.message_id)
+    await bot.set_message_reaction(chat_id=message.chat.id,
+                                   message_id=message.message_id,
+                                   reaction=[{"type": "emoji", "emoji": "🔥"}])
+    await asyncio.sleep(1)
     await rq.set_business(business=message.text, tg_id=message.chat.id)
     await state.set_state(state=None)
     position = [0, 0, 0, 0, 0, 0]
     await state.update_data(position=position)
-    await message.answer(text=f"Чем мы можем быть полезны Вам?\n\n"
-                              f"Отметьте из предложенного (можно несколько вариантов):",
+    await message.answer(text=f"Чем мы можем быть вам полезны?\n\n"
+                              f"Отметьте из предложенного списка (можно несколько вариантов):",
                          reply_markup=kb.keyboard_position(position=position))
 
 
@@ -104,7 +116,7 @@ async def select_position(callback: CallbackQuery, state: FSMContext):
     """
     logging.info(f'select_position {callback.message.chat.id}')
     data = await state.get_data()
-    print(data)
+
     position = data['position']
     index = int(callback.data.split('_')[-1])
     if position[index]:
@@ -127,10 +139,10 @@ async def process_continue(callback: CallbackQuery, state: FSMContext):
     :return:
     """
     logging.info(f'process_continue {callback.message.chat.id}')
-    await callback.message.edit_text(text="Отлично 🎉, записал!",
+    await callback.message.edit_text(text="Записал! 👌",
                                      reply_markup=None)
 
-    await callback.message.answer(text="Оставьте свой номер телефона!",
+    await callback.message.answer(text="Оставьте свой номер телефона:",
                                   reply_markup=kb.keyboards_get_contact())
     data = await state.get_data()
     position = ','.join(map(str, data["position"]))
@@ -148,12 +160,12 @@ async def get_phone_user(message: Message, state: FSMContext, bot: Bot) -> None:
     :return:
     """
     logging.info(f'get_phone_user: {message.chat.id}')
-    await bot.delete_message(chat_id=message.chat.id,
-                             message_id=message.message_id-2)
-    await bot.delete_message(chat_id=message.chat.id,
-                             message_id=message.message_id-1)
-    await bot.delete_message(chat_id=message.chat.id,
-                             message_id=message.message_id)
+    # await bot.delete_message(chat_id=message.chat.id,
+    #                          message_id=message.message_id-2)
+    # await bot.delete_message(chat_id=message.chat.id,
+    #                          message_id=message.message_id-1)
+    # await bot.delete_message(chat_id=message.chat.id,
+    #                          message_id=message.message_id)
     # если номер телефона отправлен через кнопку "Поделится"
     if message.contact:
         phone = str(message.contact.phone_number)
@@ -167,7 +179,7 @@ async def get_phone_user(message: Message, state: FSMContext, bot: Bot) -> None:
     # обновляем поле номера телефона
     await state.update_data(phone=phone)
     await rq.set_phone(phone=phone, tg_id=message.chat.id)
-    await message.answer(text="Укажите удобное время для звонка",
+    await message.answer(text="В какое время удобнее, чтобы наш менеджер связался с вами?",
                          reply_markup=ReplyKeyboardRemove())
     await state.set_state(User.time)
 
@@ -182,14 +194,14 @@ async def get_time(message: Message, state: FSMContext, bot: Bot) -> None:
     :return:
     """
     logging.info(f'get_phone_user: {message.chat.id}')
-    await bot.delete_message(chat_id=message.chat.id,
-                             message_id=message.message_id-1)
-    await bot.delete_message(chat_id=message.chat.id,
-                             message_id=message.message_id)
+    # await bot.delete_message(chat_id=message.chat.id,
+    #                          message_id=message.message_id-1)
+    # await bot.delete_message(chat_id=message.chat.id,
+    #                          message_id=message.message_id)
     await state.set_state(state=None)
     await state.update_data(time=message.text)
-    await message.answer(text="Отлично! У меня есть пару идей для Вас,"
-                              " сейчас обсужу их  с нашими специалистами и свяжемся с Вами в удобное время!")
+    await message.answer(text="Отлично! 🔥🔥🔥\n У меня уже есть пара идей для вашего бизнеса.\n"
+                              "Сейчас обсужу их с командой, и свяжемся с вами в удобное время. ")
     data = await state.get_data()
     user_info = await rq.get_user_tg_id(tg_id=message.chat.id)
     position = data["position"]
